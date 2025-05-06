@@ -13,33 +13,30 @@ TOKEN = '8087872727:AAG6_Fy_SL6z-s_cJkojfihiBUVd-UfvSRM'
 bot = telebot.TeleBot(TOKEN)
 
 def detect_bowls(frame):
-    """تشخیص کاسه‌ها با دقت بالا"""
+    """تشخیص کاسه‌های نارنجی"""
     try:
-        # تبدیل به فضای رنگی HSV
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        
-        # محدوده رنگ برای اشیاء روشن (کاسه‌ها)
-        lower = np.array([0, 0, 150])
-        upper = np.array([179, 80, 255])
-        mask = cv2.inRange(hsv, lower, upper)
-        
-        # پردازش ماسک برای حذف نویز
+
+        # محدوده رنگ نارنجی در HSV
+        lower_orange = np.array([10, 100, 100])
+        upper_orange = np.array([25, 255, 255])
+        mask = cv2.inRange(hsv, lower_orange, upper_orange)
+
+        # حذف نویز
         kernel = np.ones((7,7), np.uint8)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-        
-        # یافتن کانتورها
+
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        # فیلتر کانتورها بر اساس اندازه
+
         bowls = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if 500 < area < 20000:  # محدوده اندازه کاسه
+            if 500 < area < 20000:
                 bowls.append(cnt)
-                
+
         return bowls
-        
+
     except Exception as e:
         logger.error(f"خطا در تشخیص کاسه‌ها: {e}")
         return []
